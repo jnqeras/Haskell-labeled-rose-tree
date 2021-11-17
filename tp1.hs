@@ -10,23 +10,23 @@ instance Show a => Show (RTE a) where
 
 --------------Resolver--------------
 instance Eq a => Eq (RTE a) where       --fixme: averiguüar que es esto de instance 
-    (==) (==) (Rose a []) (Rose b []) = a == b
+    (==) (Rose a []) (Rose b []) = a == b
     (==) (Rose a as) (Rose b bs) = a == b && length as == length bs && listIsIn as bs && listIsIn bs as where
         listIsIn [] _ = True
         listIsIn _ [] = False
         listIsIn ((_, x):xs) ys =  any (\(_, y) -> x == y) ys && listIsIn xs ys
 
+foldRose = undefined
 
---fixme: averiguar por que a veces uso RTE y a veces Rose.
-foldRose :: (a -> b -> b) -> b -> [(Char,RTE a)] -> b  
--- foldRose toma una función (que toma un elemento a -el tipo del rose-, toma el resultado de los llamado recursivos (de tipo b)
--- y devuelve un resultado de tipo b), un caso base (de tipo b), y una lista de hijos del nodo actual (a los cuales se puede acceder 
--- por meido de una etiqueta de tipo Char) y devuelve un resutlado de tipo b.
-foldRose _ z [] = z           -- foldRose de cualquier función, sobre un caso base y una lista vacía, devuelve el caso base.
-foldRose f z Rose a as = f a (foldRose f z as)
+-- --fixme: averiguar por que a veces uso RTE y a veces Rose.
+-- foldRose :: (a -> b -> b) -> b -> [(Char,RTE a)] -> b  
+-- -- foldRose toma una función (que toma un elemento de tipo a -el tipo del rose-, toma el resultado de los llamado recursivos (de tipo b)
+-- -- y devuelve un resultado de tipo b), un caso base (de tipo b), y Rosetree y devuelve un resutlado de tipo b.
+-- foldRose _ z (Rose _ []) = z           -- foldRose de cualquier función, sobre un caso base y una lista vacía, devuelve el caso base.
+-- foldRose f z (Rose a as) = f a (foldRose f z as)
 
 
-mapRTE = undefined
+mapRTE = undefined --fixme: averiguar diferencia entre map y fold.
 
 
 nodos :: RTE a -> [a]
@@ -61,11 +61,17 @@ allTests = test [
   "ejercicio6" ~: testsEj6
   ]
 
-unRose = Rose 1 [('a',Rose 2 [('c',Rose 4 [])]),('b',Rose 3 [])]
+rose1 = Rose 1 [('a',Rose 2 [('c',Rose 4 [])]),('b',Rose 3 [])]
+roseIgualA1 = Rose 1 [('a',Rose 2 [('c',Rose 4 [])]),('b',Rose 3 [])]
+rose1DistintaRaiz = Rose 123 [('a',Rose 2 [('c',Rose 4 [])]),('b',Rose 3 [])]
+rose1ConOtroOrdenDeHijos = Rose 1 [('b',Rose 3 []), ('a',Rose 2 [('c',Rose 4 [])])]
+rose1PeroConMasHijos = Rose 1 [('b',Rose 3 []), ('a',Rose 2 [('c',Rose 4 []), ('d', Rose 12 [])])]
 
 testsEj1 = test [
-  2 ~=? 1+1,
-  4 ~=? 2*2
+  rose1 ~=? roseIgualA1,
+  -- rose1 ~=? rose1DistintaRaiz  	fixme: averigüar cómo hacer para que hacer un assert negado (para mostrar que dos rose son distintos).
+  rose1 ~=? rose1ConOtroOrdenDeHijos
+  -- rose1 ~=? rose1PeroConMasHijos	fixme: averigüar cómo hacer para que hacer un assert negado (para mostrar que dos rose son distintos).
   ]
 
 testsEj2 = test [
