@@ -31,7 +31,7 @@ mapRTE f (Rose a as) = Rose (f a) (map (\(etiqueta, hijo) -> (etiqueta, mapRTE f
 -- mapRTE f (Rose a []) = Rose (f a) []  fixme: quizás al caso base no lo necesito.
 
 nodos :: RTE a -> [a]
-nodos = undefined
+nodos a = foldRose (:) [] a                  -- "(:)" va co notación prefija para que funcione en el caso base de foldRose
 
 
 etiquetas :: RTE a -> [Char]
@@ -79,6 +79,11 @@ rose1Aumentado10 = Rose 11 [('a',Rose 12 [('c',Rose 14 [])]),('b',Rose 13 [])]
 -- roseBooleanoNegado = Rose False [(True,Rose 12 [(False,Rose 14 [])]),(True,Rose 13 [])]
 --fold1 = foldRose (+) 0 rose1 --fixme: no sé si esto sería mejor ponerlo dentro del testsEj2
   
+listaRose1 = [1,3,2,4]
+listaRose1ConOtroOrdenDeHijos = [1,2,4,3]
+listaRoseSinHijos = [3]
+
+
 testsEj1 = test [
   rose1 ~=? roseIgualA1,
   -- rose1 ~=? rose1DistintaRaiz  	fixme: averigüar cómo hacer para que hacer un assert negado (para mostrar que dos rose son distintos).
@@ -109,9 +114,10 @@ testsEj2 = test [
 --  mapRTE negate roseBooleano ~=? roseBooleanoNegado 
   ]
 
-testsEj3 = test [
-  2 ~=? 1+1,
-  4 ~=? 2*2
+testsEj3 = test [ --fixme: debería mejorar estos tests, para que en vez de comparar por igualdad, compare por doble pertenencia (ignorando el orden de los elementos).
+  nodos rose1 ~=? listaRose1,
+  nodos rose1ConOtroOrdenDeHijos ~=? listaRose1ConOtroOrdenDeHijos,
+  nodos roseSinHijos ~=? listaRoseSinHijos
   ]
 
 testsEj4 = test [
