@@ -14,7 +14,7 @@ instance Eq a => Eq (RTE a) where       --fixme: averiguüar que es esto de inst
     (==) (Rose a as) (Rose b bs) = a == b && length as == length bs && listIsIn as bs && listIsIn bs as where
         listIsIn [] _ = True
         listIsIn _ [] = False
-        listIsIn ((_, x):xs) ys =  any (\(_, y) -> x == y) ys && listIsIn xs ys
+        listIsIn ((_, x):xs) ys =  any (\(_, y) -> x == y) ys && listIsIn xs ys -- fixme: entender esta función.
 
 --fixme: averiguar por que a veces uso RTE y a veces Rose.
 foldRose :: (a -> b -> b) -> b -> RTE a -> b  
@@ -26,9 +26,9 @@ foldRose f z (Rose a []) = f a z           --foldRose de la función f, sobre un
 foldRose f z (Rose a as) = f a (foldl (\z (_, hijo) -> foldRose f z hijo) z as)
 --fixme: ver el error que me tiraba al usar foldr en vez de foldl.
 
-
-mapRTE = undefined --fixme: averiguar diferencia entre map y fold.
-
+mapRTE :: (a -> b) -> RTE a -> RTE b 
+mapRTE f (Rose a as) = Rose (f a) (map (\(etiqueta, hijo) -> (etiqueta, mapRTE f hijo)) as) --fixme: hay algun problema con que cree un nuevo RTE cuando ejecuto map?   
+-- mapRTE f (Rose a []) = Rose (f a) []  fixme: quizás al caso base no lo necesito.
 
 nodos :: RTE a -> [a]
 nodos = undefined
@@ -73,6 +73,10 @@ roseProfundidad1 = Rose 5 [('a',Rose 2 []), ('c',Rose 4 []), ('b',Rose 3 [])]
 roseConMinEnElNivelMasProfundo = Rose 5 [('a',Rose 3 [('c',Rose 4 [])]),('b',Rose 2 [])]
 roseSinHijos = Rose 3 []
 
+rose1Negativo = Rose (-1) [('a',Rose (-2) [('c',Rose (-4) [])]),('b',Rose (-3) [])]
+rose1Aumentado10 = Rose 11 [('a',Rose 12 [('c',Rose 14 [])]),('b',Rose 13 [])]
+-- roseBooleano = Rose True [(False,Rose 12 [(True,Rose 14 [])]),(False,Rose 13 [])]   Fixme: no puedo escribir los booleanos True y false? Abajo también los uso.
+-- roseBooleanoNegado = Rose False [(True,Rose 12 [(False,Rose 14 [])]),(True,Rose 13 [])]
 --fold1 = foldRose (+) 0 rose1 --fixme: no sé si esto sería mejor ponerlo dentro del testsEj2
   
 testsEj1 = test [
@@ -84,6 +88,7 @@ testsEj1 = test [
 
 testsEj2 = test [
   -- fixme: ver si son sufientes tests.
+  -- Tests para Fold:
   -- Mínimo en la raíz:
   foldRose min 100 rose1 ~=? 1, --fixme: acá tengo un problema, porque tengo que conocer al mínimo del rose para pasarlo como caso base .
   -- Mínimo en un rose sin hijos:
@@ -96,8 +101,12 @@ testsEj2 = test [
   -- Sumatoria de todos los valores del roseTree;
   foldRose (+) 0 rose1 ~=? 10,
   -- Productoria de todos los valores del roseTree;
-  foldRose (*) 1 rose1 ~=? 24
+  foldRose (*) 1 rose1 ~=? 24,
 
+  -- Tests para Map:
+  mapRTE abs rose1Negativo ~=? rose1,
+  mapRTE (+10) rose1 ~=? rose1Aumentado10
+--  mapRTE negate roseBooleano ~=? roseBooleanoNegado 
   ]
 
 testsEj3 = test [
