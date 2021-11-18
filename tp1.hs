@@ -16,14 +16,15 @@ instance Eq a => Eq (RTE a) where       --fixme: averiguüar que es esto de inst
         listIsIn _ [] = False
         listIsIn ((_, x):xs) ys =  any (\(_, y) -> x == y) ys && listIsIn xs ys
 
-foldRose = undefined
-
--- --fixme: averiguar por que a veces uso RTE y a veces Rose.
--- foldRose :: (a -> b -> b) -> b -> [(Char,RTE a)] -> b  
--- -- foldRose toma una función (que toma un elemento de tipo a -el tipo del rose-, toma el resultado de los llamado recursivos (de tipo b)
--- -- y devuelve un resultado de tipo b), un caso base (de tipo b), y Rosetree y devuelve un resutlado de tipo b.
--- foldRose _ z (Rose _ []) = z           -- foldRose de cualquier función, sobre un caso base y una lista vacía, devuelve el caso base.
--- foldRose f z (Rose a as) = f a (foldRose f z as)
+--fixme: averiguar por que a veces uso RTE y a veces Rose.
+foldRose :: (a -> b -> b) -> b -> RTE a -> b  
+-- foldRose toma una función (que toma un elemento de tipo a -el tipo del rose-, toma el resultado de los llamado recursivos -de tipo b-
+-- y devuelve un resultado de tipo b), un caso base (de tipo b), y un Rosetree de tipo a y devuelve un resutlado de tipo b.--
+foldRose f z (Rose a []) = f a z           --foldRose de la función f, sobre un RTE sin hijos, devuelve la ejecución de f sobre la raíz y el caso base z.
+-- foldl ::	(a -> b -> a) -> a -> [b] -> a
+-- foldlEnESteCaso ::  (b -> (Char, RTE a) -> b) -> b -> [(Char, RTE a)] -> b
+foldRose f z (Rose a as) = f a (foldl (\z (_, hijo) -> foldRose f z hijo) z as)
+--fixme: ver el error que me tiraba al usar foldr en vez de foldl.
 
 
 mapRTE = undefined --fixme: averiguar diferencia entre map y fold.
@@ -67,6 +68,13 @@ rose1DistintaRaiz = Rose 123 [('a',Rose 2 [('c',Rose 4 [])]),('b',Rose 3 [])]
 rose1ConOtroOrdenDeHijos = Rose 1 [('b',Rose 3 []), ('a',Rose 2 [('c',Rose 4 [])])]
 rose1PeroConMasHijos = Rose 1 [('b',Rose 3 []), ('a',Rose 2 [('c',Rose 4 []), ('d', Rose 12 [])])]
 
+
+roseProfundidad1 = Rose 5 [('a',Rose 2 []), ('c',Rose 4 []), ('b',Rose 3 [])]
+roseConMinEnElNivelMasProfundo = Rose 5 [('a',Rose 3 [('c',Rose 4 [])]),('b',Rose 2 [])]
+roseSinHijos = Rose 3 []
+
+--fold1 = foldRose (+) 0 rose1 --fixme: no sé si esto sería mejor ponerlo dentro del testsEj2
+  
 testsEj1 = test [
   rose1 ~=? roseIgualA1,
   -- rose1 ~=? rose1DistintaRaiz  	fixme: averigüar cómo hacer para que hacer un assert negado (para mostrar que dos rose son distintos).
@@ -75,8 +83,21 @@ testsEj1 = test [
   ]
 
 testsEj2 = test [
-  2 ~=? 1+1,
-  4 ~=? 2*2
+  -- fixme: ver si son sufientes tests.
+  -- Mínimo en la raíz:
+  foldRose min 100 rose1 ~=? 1, --fixme: acá tengo un problema, porque tengo que conocer al mínimo del rose para pasarlo como caso base .
+  -- Mínimo en un rose sin hijos:
+  foldRose min 100 roseSinHijos ~=? 3, 
+  -- Mínimo en un hijo:
+  foldRose min 100 roseProfundidad1 ~=? 2,
+  -- Mínimo en una hoja:
+  foldRose min 100 roseConMinEnElNivelMasProfundo ~=? 2,  -- Fixme: este test muestra que no tiene problemas con llegar a la última hoja del rose,.
+
+  -- Sumatoria de todos los valores del roseTree;
+  foldRose (+) 0 rose1 ~=? 10,
+  -- Productoria de todos los valores del roseTree;
+  foldRose (*) 1 rose1 ~=? 24
+
   ]
 
 testsEj3 = test [
